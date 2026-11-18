@@ -1,0 +1,38 @@
+name: Build Mod
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Kalau yang diupload cuma physics-converter.zip, ekstrak dulu
+      - name: Ekstrak zip kalau perlu
+        run: |
+          if [ ! -f build.gradle ] && [ -f physics-converter.zip ]; then
+            unzip -q physics-converter.zip
+            cp -r physics-converter/. .
+          fi
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+
+      - name: Build
+        run: gradle build --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: physics-converter-mod
+          path: |
+            build/libs/*.jar
+            !build/libs/*-sources.jar
